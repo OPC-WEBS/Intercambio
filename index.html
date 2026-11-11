@@ -189,6 +189,15 @@ async function getPreview(rawUrl) {
   const fb = { url, title: titleFromUrl(url), image: '', site: host(url) };
   try {
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 12000);
+    // Si hay un servicio propio configurado (previewApi) se usa ese; si no, el gratuito Microlink
+    if (firebaseConfig.previewApi) {
+      const r = await fetch(firebaseConfig.previewApi + '?url=' + encodeURIComponent(url), { signal: ctl.signal }); clearTimeout(t);
+      const d = await r.json();
+      if (d.error) return fb;
+      const p = { url: d.url || url, title: String(d.title || '').slice(0, 160) || fb.title, image: d.image || '', site: d.site || host(d.url || url) || fb.site };
+      if (p.title || p.image) cache.set(url, p);
+      return p;
+    }
     const r = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url), { signal: ctl.signal }); clearTimeout(t);
     const j = await r.json();
     if (j.status !== 'success' || !j.data) return fb;

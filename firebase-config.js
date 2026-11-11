@@ -5,5 +5,7 @@ export const firebaseConfig = {
   projectId: "intercambio-opc",
   storageBucket: "intercambio-opc.firebasestorage.app",
   messagingSenderId: "849144669269",
-  appId: "1:849144669269:web:042951ddcca798483a60dc"
+  appId: "1:849144669269:web:042951ddcca798483a60dc",
+  // Servicio propio (Cloudflare) que lee título y foto de los links
+  previewApi: "https://intercambio-preview.darkergamers.workers.dev"
 };
