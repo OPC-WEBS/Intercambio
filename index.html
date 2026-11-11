@@ -65,6 +65,9 @@
   .row{display:grid;grid-template-columns:1fr 120px;gap:12px}
   .opt{background:#fff8;border:1px solid var(--line);border-radius:16px;padding:14px 20px 20px;margin-top:16px}
   .opt-grid{display:grid;grid-template-columns:1fr 1fr 1.15fr;gap:16px}
+  .opt .nt{grid-column:1/3}
+  .opt .pvc{grid-column:3;grid-row:1/3}
+  .gnote{display:inline-block;margin-top:8px;background:#fff3d6;color:#7a5a12;border-radius:10px;padding:5px 11px;font-size:.82rem;font-weight:500}
   .opt .pv{height:70px}
   .opt .pv:empty{border:1.5px dashed var(--line);border-radius:14px}
   .opt .pv .link{height:70px;min-height:0;margin:0}
@@ -238,7 +241,8 @@ function render() {
       </div>
       ${(u.items || []).map((it, n) => `<div class="wish"><div class="num">Opción ${n + 1}</div>
         ${it.title ? `<h3>${esc(it.title)}</h3>` : ''}
-        ${it.url ? linkCard(it.url, it.preview) : ''}</div>`).join('')}
+        ${it.url ? linkCard(it.url, it.preview) : ''}
+        ${it.note ? `<div class="gnote">💬 ${esc(it.note)}</div>` : ''}</div>`).join('')}
     </article>`).join('') : `<div class="empty">${users.length ? 'No encontré a nadie con ese nombre' : 'Aún no hay nadie… ¡sé la primera persona en registrarse!'}</div>`;
 }
 $('#q').addEventListener('input', render);
@@ -256,7 +260,8 @@ function buildOpts(items = []) {
       <div class="opt-grid">
         <div><label>Opción ${i + 1} · Título</label><input class="t" maxlength="80" placeholder="Ej. Audífonos inalámbricos" value="${esc(items[i]?.title)}"></div>
         <div><label>Link</label><input class="u" placeholder="Pega aquí el link" value="${esc(items[i]?.url)}"></div>
-        <div><label>Vista previa</label><div class="pv">${items[i]?.url ? linkCard(items[i].url, items[i].preview) : ''}</div></div>
+        <div class="pvc"><label>Vista previa</label><div class="pv">${items[i]?.url ? linkCard(items[i].url, items[i].preview) : ''}</div></div>
+        <div class="nt"><label>Nota (opcional)</label><input class="n" maxlength="80" placeholder="Ej. Presupuesto máx. $700 · Doy diferencia de $200" value="${esc(items[i]?.note)}"></div>
       </div>
     </div>`).join('');
   document.querySelectorAll('.opt').forEach((o, i) => {
@@ -290,14 +295,14 @@ $('#form').addEventListener('submit', async e => {
     if (!editing && !/^\d{4}$/.test(pin)) throw new Error('El PIN debe ser de 4 números');
     const items = [];
     for (const o of document.querySelectorAll('.opt')) {
-      const title = o.querySelector('.t').value.trim().slice(0, 80), raw = o.querySelector('.u').value.trim();
+      const title = o.querySelector('.t').value.trim().slice(0, 80), raw = o.querySelector('.u').value.trim(), note = o.querySelector('.n').value.trim().slice(0, 80);
       if (!title && !raw) continue;
       let url = null, preview = null;
       if (raw) {
         url = normalizeUrl(raw); if (!url) throw new Error('Uno de los links no es válido');
         preview = o._pv && o._pv.url === url ? o._pv.preview : await getPreview(url);
       }
-      items.push({ title, url, preview });
+      items.push({ title, url, preview, note });
     }
     if (!items.length) throw new Error('Agrega al menos una opción');
     if (editing) {
