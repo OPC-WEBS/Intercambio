@@ -7,5 +7,5 @@ export const firebaseConfig = {
   messagingSenderId: "849144669269",
   appId: "1:849144669269:web:042951ddcca798483a60dc",
   // Servicio propio (Cloudflare) que lee título y foto de los links
-  previewApi: "https://intercambio-preview.darkergamers.workers.dev"
+  previewApi: "https://intercambio-preview.opc-webs.workers.dev"
 };
