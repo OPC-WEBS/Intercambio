@@ -119,7 +119,7 @@
   <p class="sub">Pon tu nombre y hasta tres opciones. Con el PIN podrás editar tu lista después.</p>
   <div class="row">
     <div><label for="name">Tu nombre</label><input id="name" maxlength="40" required></div>
-    <div><label for="pin">PIN (4 núm.)</label><input id="pin" inputmode="numeric" maxlength="4" pattern="\d{4}" title="4 números" required></div>
+    <div><label for="pin">PIN (4 núm.)</label><input id="pin" type="password" autocomplete="new-password" inputmode="numeric" maxlength="4" pattern="\d{4}" title="4 números" required></div>
   </div>
   <div id="opts"></div>
   <div class="err" id="err"></div>
@@ -132,7 +132,7 @@
 <dialog id="pindlg" class="small"><form class="form" id="pinform" method="dialog">
   <h2 style="font-size:1.5rem">Tu PIN</h2>
   <p class="sub" id="pinsub"></p>
-  <input id="pinask" inputmode="numeric" maxlength="4" placeholder="••••" required>
+  <input id="pinask" type="password" autocomplete="off" inputmode="numeric" maxlength="4" placeholder="••••" required>
   <div class="err" id="pinerr"></div>
   <div class="actions"><button type="button" class="btn ghost" id="pincancel">Cancelar</button><button class="btn">Continuar</button></div>
 </form></dialog>
