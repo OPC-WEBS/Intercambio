@@ -66,6 +66,14 @@
   .opt{background:#fff8;border:1px solid var(--line);border-radius:16px;padding:14px 20px 20px;margin-top:16px}
   .opt-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1.25fr;gap:14px}
   .gnote{display:inline-block;margin-top:8px;background:#fff3d6;color:#7a5a12;border-radius:10px;padding:5px 11px;font-size:.82rem;font-weight:500}
+  .chk{display:flex;align-items:center;gap:8px;margin-top:10px!important;font-size:.85rem;font-weight:600;color:var(--ink);cursor:pointer;text-transform:none;letter-spacing:0}
+  .chk input{width:auto;padding:0;margin:0;accent-color:var(--accent2);cursor:pointer}
+  .xrow{display:none;margin-top:6px}
+  .xrow.on{display:grid}
+  .xrow .xpv{grid-column:3/5}
+  .xwrap{margin-top:10px;padding-left:12px;border-left:3px solid var(--rose)}
+  .xwrap .xl{font-size:.7rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:4px}
+  .xwrap h4{font-size:.92rem;font-weight:700;margin:0 0 6px}
   .opt .pv{height:70px}
   .opt .pv:empty{border:1.5px dashed var(--line);border-radius:14px}
   .opt .pv .link{height:70px;min-height:0;margin:0}
@@ -74,18 +82,19 @@
   .opt .pv .pt{font-size:.88rem;line-height:1.25}
   .opt .pv .site{font-size:.76rem}
   .opt .pv .note{font-size:.85rem;color:var(--muted);padding-top:24px}
-  @media(max-width:700px){.opt-grid{grid-template-columns:1fr;gap:0}.opt .pv{height:auto;min-height:46px}}
+  @media(max-width:700px){.opt-grid,.xrow.on{grid-template-columns:1fr;gap:0}.xrow .xpv{grid-column:auto}.opt .pv{height:auto;min-height:46px}}
   .opt b{font-family:'Fraunces',serif;font-size:1.05rem}
   .opt label{margin-top:6px}
     .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
   .err{color:#c23b57;font-size:.9rem;margin-top:10px;min-height:1.1em}
   /* Pantallas bajas: versión compacta para que no salga scroll */
-  @media(max-height:860px){
+  @media(max-height:960px){
     .form{padding:22px 32px 18px} .form h2{font-size:1.7rem} .form .sub{font-size:.9rem;margin-bottom:6px}
     label{margin:10px 0 5px} input{padding:10px 14px}
     .opt{padding:10px 16px 12px;margin-top:10px} .opt label{margin-top:6px}
     .opt .pv,.opt .pv .link{height:52px} .opt .pv .link .thumb{width:52px;font-size:1.1rem}
     .opt .pv .link .txt{padding:4px 12px;gap:1px} .opt .pv .pt{font-size:.78rem;line-height:1.2} .opt .pv .site{font-size:.68rem} .opt .pv .note{padding-top:14px}
+    .chk{margin-top:6px!important;font-size:.8rem}
     .actions{margin-top:12px} .err{margin-top:6px}
   }
   .small{width:min(360px,92vw)}
@@ -226,7 +235,7 @@ function linkCard(url, p) {
 
 function render() {
   const q = norm($('#q').value.trim());
-  const shown = q ? users.filter(u => norm(u.name).includes(q) || (u.items || []).some(i => norm(i.title).includes(q))) : users;
+  const shown = q ? users.filter(u => norm(u.name).includes(q) || (u.items || []).some(i => norm(i.title).includes(q) || (i.extra && norm(i.extra.title || '').includes(q)))) : users;
   $('#count').textContent = !users.length ? '' : q ? `${shown.length} de ${users.length} personas` : `${users.length} ${users.length === 1 ? 'persona registrada' : 'personas registradas'}`;
   const anim = firstRender; if (users.length) firstRender = false;
   $('#list').innerHTML = shown.length ? shown.map((u, i) => `
@@ -240,7 +249,9 @@ function render() {
       ${(u.items || []).map((it, n) => `<div class="wish"><div class="num">Opción ${n + 1}</div>
         ${it.title ? `<h3>${esc(it.title)}</h3>` : ''}
         ${it.url ? linkCard(it.url, it.preview) : ''}
-        ${it.note ? `<div class="gnote">💬 ${esc(it.note)}</div>` : ''}</div>`).join('')}
+        ${it.note ? `<div class="gnote">💬 ${esc(it.note)}</div>` : ''}
+        ${it.extra && (it.extra.title || it.extra.url) ? `<div class="xwrap"><div class="xl">➕ Para completar el monto</div>
+          ${it.extra.title ? `<h4>${esc(it.extra.title)}</h4>` : ''}${it.extra.url ? linkCard(it.extra.url, it.extra.preview) : ''}</div>` : ''}</div>`).join('')}
     </article>`).join('') : `<div class="empty">${users.length ? 'No encontré a nadie con ese nombre' : 'Aún no hay nadie… ¡sé la primera persona en registrarse!'}</div>`;
 }
 $('#q').addEventListener('input', render);
@@ -261,16 +272,27 @@ function buildOpts(items = []) {
         <div class="nt"><label>Nota (opcional)</label><input class="n" maxlength="80" placeholder="Ej. Doy diferencia" value="${esc(items[i]?.note)}"></div>
         <div class="pvc"><label>Vista previa</label><div class="pv">${items[i]?.url ? linkCard(items[i].url, items[i].preview) : ''}</div></div>
       </div>
+      <label class="chk"><input type="checkbox" class="xc" ${items[i]?.extra ? 'checked' : ''}> ➕ Completar el monto con otro producto</label>
+      <div class="opt-grid xrow ${items[i]?.extra ? 'on' : ''}">
+        <div><label>Para completar · Título</label><input class="xt" maxlength="80" placeholder="Ej. Funda para el control" value="${esc(items[i]?.extra?.title)}"></div>
+        <div><label>Link</label><input class="xu" placeholder="Pega aquí el link" value="${esc(items[i]?.extra?.url)}"></div>
+        <div class="xpv"><label>Vista previa</label><div class="pv xp">${items[i]?.extra?.url ? linkCard(items[i].extra.url, items[i].extra.preview) : ''}</div></div>
+      </div>
     </div>`).join('');
   document.querySelectorAll('.opt').forEach((o, i) => {
-    const u = o.querySelector('.u'), pv = o.querySelector('.pv');
-    if (items[i]?.url) o._pv = { url: items[i].url, preview: items[i].preview };
-    u.addEventListener('change', async () => {
-      const v = u.value.trim(); o._pv = null; if (!v) { pv.innerHTML = ''; return; }
-      const nu = normalizeUrl(v); if (!nu) { pv.innerHTML = '<div class="note" style="color:#c23b57">Link no válido</div>'; return; }
-      pv.innerHTML = '<div class="note">Buscando…</div>';
-      const p = await getPreview(nu); o._pv = { url: nu, preview: p }; pv.innerHTML = linkCard(p.url || nu, p);
-    });
+    const wire = (uSel, pvSel, key, init) => {
+      const u = o.querySelector(uSel), pv = o.querySelector(pvSel);
+      if (init?.url) o[key] = { url: init.url, preview: init.preview };
+      u.addEventListener('change', async () => {
+        const v = u.value.trim(); o[key] = null; if (!v) { pv.innerHTML = ''; return; }
+        const nu = normalizeUrl(v); if (!nu) { pv.innerHTML = '<div class="note" style="color:#c23b57">Link no válido</div>'; return; }
+        pv.innerHTML = '<div class="note">Buscando…</div>';
+        const p = await getPreview(nu); o[key] = { url: nu, preview: p }; pv.innerHTML = linkCard(p.url || nu, p);
+      });
+    };
+    wire('.u', '.pv', '_pv', items[i]);
+    wire('.xu', '.xp', '_xpv', items[i]?.extra);
+    o.querySelector('.xc').addEventListener('change', e => o.querySelector('.xrow').classList.toggle('on', e.target.checked));
   });
 }
 
@@ -300,7 +322,19 @@ $('#form').addEventListener('submit', async e => {
         url = normalizeUrl(raw); if (!url) throw new Error('Uno de los links no es válido');
         preview = o._pv && o._pv.url === url ? o._pv.preview : await getPreview(url);
       }
-      items.push({ title, url, preview, note });
+      const item = { title, url, preview, note };
+      if (o.querySelector('.xc').checked) {
+        const xt = o.querySelector('.xt').value.trim().slice(0, 80), xr = o.querySelector('.xu').value.trim();
+        if (xt || xr) {
+          let xurl = null, xprev = null;
+          if (xr) {
+            xurl = normalizeUrl(xr); if (!xurl) throw new Error('Uno de los links para completar no es válido');
+            xprev = o._xpv && o._xpv.url === xurl ? o._xpv.preview : await getPreview(xurl);
+          }
+          item.extra = { title: xt, url: xurl, preview: xprev };
+        }
+      }
+      items.push(item);
     }
     if (!items.length) throw new Error('Agrega al menos una opción');
     if (editing) {
